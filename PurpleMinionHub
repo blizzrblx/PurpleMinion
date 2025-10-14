@@ -1,0 +1,784 @@
+
+--!nocheck
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+Rayfield:Notify({
+	Title = "Purple Minion Hub",
+	Content = "Thanks for using my script!",
+	Duration = 6.5,
+	Image = "thumbs-up",
+})
+
+local function CheckRequire()
+	local TestResults = {}
+
+	local RequireAbility, Requireresult = pcall(function()
+		require(game.ReplicatedStorage.Systems.Character.Game.Sprinting)
+	end)
+
+	if RequireAbility then
+		TestResults.Require = true
+	else
+		TestResults.Require = nil
+	end
+	return TestResults
+end
+
+local function Ragdoll()
+	local char = game.Players.LocalPlayer.Character
+	local Hum = char.Humanoid :: Humanoid
+
+	for _,motor6d in pairs(char:GetDescendants()) do
+		if motor6d:IsA('Motor6D') then
+			local a0,a1 = Instance.new("Attachment"),Instance.new("Attachment")
+
+			a0.CFrame = motor6d.C0
+			a1.CFrame = motor6d.C1
+
+			a0.Parent = motor6d.Part0
+			a1.Parent = motor6d.Part1
+
+			local BallSocket = Instance.new("BallSocketConstraint")
+			BallSocket.Parent = motor6d.Parent
+			BallSocket.Attachment0 = a0
+			BallSocket.Attachment1 = a1
+
+			motor6d:Destroy()
+		end
+	end
+end
+
+local function UnRagdoll()
+	local char = game.Players.LocalPlayer.Character
+	local Hum = char.Humanoid :: Humanoid
+
+	for _,BallSocket in pairs(char:GetDescendants()) do
+		if BallSocket:IsA('BallSocketConstraint') then
+			local motor6d = Instance.new("Motor6D")
+			motor6d.Parent = BallSocket.Parent
+			motor6d.C0 = BallSocket.Attachment0.CFrame
+			motor6d.C1 = BallSocket.Attachment1.CFrame
+			motor6d.Part0 = BallSocket.Attachment0.Parent
+			motor6d.Part1 = BallSocket.Attachment1.Parent
+
+			BallSocket:Destroy()
+		end
+	end
+end
+
+local function HiglightLobby(Value:boolean)
+	for i,spectator in pairs(workspace.Players.Spectating:GetChildren()) do
+		if Value == true and not spectator:FindFirstChild("MinionESP") then
+			local ESPInstance = Instance.new("Highlight",spectator)
+			ESPInstance.Name = "MinionESP"
+			ESPInstance.FillColor = Color3.fromRGB(0,255,0)
+		elseif Value == false then
+			if spectator:FindFirstChild("MinionESP") then
+				spectator:FindFirstChild("MinionESP"):Destroy()
+			end
+		end
+	end
+end
+
+local function HiglightKillers(Value:boolean)
+	for i,killer in pairs(workspace.Players.Killers:GetChildren()) do
+		if Value == true and not killer:FindFirstChild("MinionESP") then
+			local ESPInstance = Instance.new("Highlight",killer)
+			ESPInstance.Name = "MinionESP"
+			ESPInstance.FillColor = Color3.fromRGB(255,0,0)
+		elseif Value == false then
+			if killer:FindFirstChild("MinionESP") then
+				killer:FindFirstChild("MinionESP"):Destroy()
+			end
+		end
+	end
+end
+
+local function HiglightSurvivors(Value:boolean)
+	for i,survivor in pairs(workspace.Players.Survivors:GetChildren()) do
+		if Value == true and not survivor:FindFirstChild("MinionESP") then
+			local ESPInstance = Instance.new("Highlight",survivor)
+			ESPInstance.Name = "MinionESP"
+			ESPInstance.FillColor = Color3.fromRGB(0,255,0)
+		elseif Value == false then
+			if survivor:FindFirstChild("MinionESP") then
+				survivor:FindFirstChild("MinionESP"):Destroy()
+			end
+		end
+	end
+end
+
+local function HighlightGens(Value:boolean)
+	if not workspace.Map.Ingame.Map then return end
+	for i,gen in pairs(workspace.Map.Ingame.Map:GetChildren()) do
+		if Value == true and not gen:FindFirstChild("MinionESP") then
+			if gen:IsA("Model") and gen.Name == "Generator" and not gen:FindFirstChild("MinionESP") then
+				local ESPInstance = Instance.new("Highlight",gen.Instances:WaitForChild("Generator"))
+				ESPInstance.Name = "MinionESP"
+				ESPInstance.FillColor = Color3.fromRGB(0,255,0)
+			end
+		elseif Value == false then
+			if gen:FindFirstChild("MinionESP") then
+				gen:FindFirstChild("MinionESP"):Destroy()
+			end
+		end
+	end
+end
+
+local function HiglightMinions(Value:boolean)
+	if not workspace.Map.Ingame then return end
+	for i,minion in pairs(workspace.Map.Ingame:GetChildren()) do
+		if minion.Name == "PizzaDeliveryRig" or minion.Name == "1x1x1x1Zombie" then
+			if Value == true then
+				local ESPInstance = Instance.new("Highlight",minion)
+				ESPInstance.Name = "MinionESP"
+				ESPInstance.FillColor = Color3.fromRGB(255, 0, 0)
+			elseif Value == false then
+				if minion:FindFirstChild("MinionESP") then
+					minion:FindFirstChild("MinionESP"):Destroy()
+				end
+			end
+		end
+	end
+end
+local function ESP(Value:boolean)
+	
+	HiglightLobby(Value)
+
+	HiglightKillers(Value)
+
+	HiglightSurvivors(Value)
+
+
+	workspace.Players.Survivors.ChildAdded:Connect(function()
+		HiglightSurvivors(Value)
+	end)
+
+	workspace.Players.Spectating.ChildAdded:Connect(function()
+		HiglightLobby(Value)
+	end)
+
+	workspace.Players.Killers.ChildAdded:Connect(function()
+		HiglightKillers(Value)
+	end)
+
+	_G.ESPDB = false
+
+	game["Run Service"].Heartbeat:Connect(function()
+		if _G.ESPDB == true then return end
+		_G.ESPDB = true
+		HiglightSurvivors(Value)
+		HiglightKillers(Value)
+		HiglightLobby(Value)
+		task.wait(0.75)
+		_G.ESPDB = false
+	end)
+end
+
+local function GenESP(Value:boolean)
+	_G.GENESPDB = false
+
+	game["Run Service"].Heartbeat:Connect(function()
+		if _G.GENESPDB == true then return end
+		_G.GENESPDB = true
+		HighlightGens(Value)
+		task.wait(1.5)
+		_G.GENESPDB = false
+	end)
+end
+
+local function MinionESP(Value:boolean)
+	_G.MINIONESPDB = false
+	game["Run Service"].Heartbeat:Connect(function()
+		if _G.MINIONESP == true then return end
+		_G.MINIONESP = true
+		HiglightMinions(Value)
+		task.wait(0.75)
+		_G.MINIONESP = false
+	end)
+end
+
+local survivorsFolder = workspace.Players:WaitForChild("Survivors")
+local rootPart = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+
+local function getClosestSurvivor()
+	local closestSurvivor = nil
+	local closestDistance = math.huge
+
+	for _, model in pairs(survivorsFolder:GetChildren()) do
+		if model:IsA("Model") and model:FindFirstChild("HumanoidRootPart") then
+			local distance = (model.HumanoidRootPart.Position - rootPart.Position).Magnitude
+			if distance < closestDistance then
+				closestDistance = distance
+				closestSurvivor = model
+			end
+		end
+	end
+
+	return closestSurvivor, closestDistance
+end
+
+local Window = Rayfield:CreateWindow({
+	Name = "Purple Minion Hub",
+	Icon = "footprints",
+	LoadingTitle = "Minion lol",
+	LoadingSubtitle = "Scripted by Tuffminion32",
+	ShowText = "Minion",
+	Theme = "Amethyst",
+
+	ToggleUIKeybind = "P",
+
+	DisableRayfieldPrompts = false,
+	DisableBuildWarnings = false,
+
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "Minion Hub [Config]",
+		FileName = "Minion Hub"
+	},
+
+	Discord = {
+		Enabled = false,
+		Invite = "noinvitelink",
+		RememberJoins = true
+	},
+
+	KeySystem = false,
+	KeySettings = {
+		Title = "Untitled",
+		Subtitle = "Key System",
+		Note = "No method of obtaining the key is provided",
+		FileName = "Key",
+		SaveKey = true,
+		GrabKeyFromSite = false,
+		Key = {"Hello"}
+	}
+})
+
+local Results = CheckRequire()
+
+if Results.Require then
+	Rayfield:Notify({
+		Title = "Purple Minion Hub",
+		Content = "require() exists (Infinite Stamina)",
+		Duration = 6.5,
+		Image = "thumbs-up",
+	})
+else
+	Rayfield:Notify({
+		Title = "Purple Minion Hub",
+		Content = "require() does not exist, use another executor",
+		Duration = 6.5,
+		Image = "thumbs-down",
+	})
+
+end
+
+local Tab = Window:CreateTab("Functions","code")
+
+local MainSection = Tab:CreateSection("FE Functions")
+
+local ClicktomoveButton = Tab:CreateButton({
+	Name = "Load Click to Move  + (FE + OP)",
+	Callback = function()
+		if _G.ClickLoaded then return end
+		_G.ClickLoaded = "Yes"
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Loaded Click to Move + ",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+
+		local enabled = false
+
+		local gui = Instance.new("ScreenGui",gethui())--change to gethui
+		gui.IgnoreGuiInset = true
+
+		local frame = Instance.new("Frame",gui)
+		frame.Size = UDim2.fromOffset(250,100)
+		frame.BackgroundTransparency = 1
+		frame.AnchorPoint = Vector2.new(0.5,0.5)
+		frame.Position = UDim2.fromScale(0.5,0.5)
+
+		local speedcontrol = Instance.new("TextBox",frame)
+		speedcontrol.BackgroundColor = BrickColor.Black()
+		speedcontrol.BorderSizePixel = 4
+		speedcontrol.BorderColor3 = Color3.fromRGB(255,0,0)
+		speedcontrol.AnchorPoint = Vector2.new(0.5,0.5)
+		speedcontrol.Text = "100"
+		speedcontrol.Size = UDim2.fromOffset(200,50)
+		speedcontrol.Position = UDim2.fromScale(0,0)
+		speedcontrol.TextScaled = true
+		speedcontrol.TextColor3 = Color3.fromRGB(255,255,255)
+		local dragger = Instance.new("UIDragDetector",frame)
+
+		local toggle = Instance.new("TextButton",gui)
+		toggle.Size = UDim2.fromOffset(200,50)
+		toggle.Position = UDim2.fromScale(0.7,0.7)
+		toggle.BackgroundColor = BrickColor.Black()
+		toggle.BorderSizePixel = 4
+		toggle.BorderColor3 = Color3.fromRGB(255,0,0)
+		toggle.AnchorPoint = Vector2.new(0.5,0.5)
+		toggle.Text = tostring(enabled)
+		toggle.TextScaled = true
+		toggle.TextColor3 = Color3.fromRGB(255,255,255)
+
+
+		local function ToggleEnabled()
+			enabled = not enabled
+			toggle.Text = tostring(enabled)
+		end
+		toggle.MouseButton1Down:Connect(function()
+			ToggleEnabled()
+		end)
+
+		local function clicktp(char,position,Yoff,speed)
+			if enabled == false then return end
+			local Debris = game:GetService("Debris")
+			local TweenService = game:GetService("TweenService")
+
+			local Pivot = char.WorldPivot
+			local Vec3Pivot = Pivot.Position
+			local TPposition = position + Vector3.new(0,Yoff,0)
+
+			local block = Instance.new("Part",workspace)
+			block.Anchored = true
+			block.CanCollide = false
+			block.Material = Enum.Material.Neon
+			block.Color = Color3.fromHSV(0.997389, 1, 1)
+			block.Transparency = 0.7
+			block.Position = TPposition.Position
+			Debris:AddItem(block,3)
+			block.CastShadow = false
+			block.Size = Vector3.new(4,6,4)
+
+			local RayOrgin = block.Position
+			local RayDirection = char.Head.Position
+
+			if workspace:FindFirstChild("Blocks") then
+				local Dirfold = workspace.Blocks
+
+				local orginblock = Instance.new("Part",Dirfold)
+				orginblock.Anchored = true
+				orginblock.CanCollide = false
+				orginblock.Position = RayOrgin
+
+				local dirblock = orginblock:Clone()
+				dirblock.Parent = Dirfold
+				dirblock.Position = RayDirection
+
+				Debris:AddItem(dirblock,3)
+				Debris:AddItem(orginblock,3)
+
+
+				local distance = (dirblock.Position- orginblock.Position).Magnitude
+
+				local sps = speed
+				speedcontrol.FocusLost:Connect(function()
+					sps = tonumber(speedcontrol.Text)
+				end)
+
+				local timetaken = distance/sps
+
+				local info = TweenInfo.new(timetaken)
+
+				char.PrimaryPart.Anchored = true
+				local Tween = TweenService:Create(char.PrimaryPart,info,{CFrame = block.CFrame})
+				Tween:Play()
+				Tween.Completed:Connect(function()
+					char.PrimaryPart.Anchored = false
+				end)
+			else
+
+				local Dirfold = Instance.new("Folder",workspace)
+				Dirfold.Name = "Blocks"
+
+				local Dirfold = workspace.Blocks
+
+				local orginblock = Instance.new("Part",Dirfold)
+				orginblock.Anchored = true
+				orginblock.CanCollide = false
+				orginblock.Position = RayOrgin
+
+				local dirblock = orginblock:Clone()
+				dirblock.Parent = Dirfold
+				dirblock.Position = RayDirection
+
+				Debris:AddItem(dirblock,3)
+				Debris:AddItem(orginblock,3)
+
+
+				local distance = (dirblock.Position- orginblock.Position).Magnitude
+
+				local sps = speed
+				speedcontrol.FocusLost:Connect(function()
+					sps = tonumber(speedcontrol.Text)
+				end)
+
+				local timetaken = distance/sps
+
+				local info = TweenInfo.new(timetaken)
+
+				char.PrimaryPart.Anchored = true
+				local Tween = TweenService:Create(char.PrimaryPart,info,{CFrame = block.CFrame})
+				Tween:Play()
+				Tween.Completed:Connect(function()
+					char.PrimaryPart.Anchored = false
+				end)
+			end
+
+		end
+
+		local Player = game.Players.LocalPlayer
+
+		local Offy = 3.5
+		local Mouse = Player:GetMouse()
+
+		Mouse.Button1Down:Connect(function()
+			clicktp(Player.Character,Mouse.Hit,Offy,speedcontrol.Text)
+		end)
+	end,
+})
+
+local RequireSection = Tab:CreateSection("Xeno & Solara are not supported, check the discord for more info!")
+
+local InfStamToggle = Tab:CreateToggle({
+	Name = "Infinite Stamina",
+	CurrentValue = false,
+	Flag = "InfiniteStam",
+	Callback = function(Value)
+		if Results.Require and Value == true then then
+			local StaminaModule = require(game.ReplicatedStorage.Systems.Character.Game.Sprinting)
+			StaminaModule.SprintSpeed = 28.5
+			StaminaModule.StaminaLossDisabled = true
+
+			Rayfield:Notify({
+				Title = "Purple Minion Hub",
+				Content = "Enabled Infinte Stamina",
+				Duration = 6.5,
+				Image = "thumbs-up",
+			})
+		else
+			Rayfield:Notify({
+				Title = "Purple Minion Hub",
+				Content = "Require() not Supported on Your Executor",
+				Duration = 6.5,
+				Image = "thumbs-up",
+			})
+		end
+	end,
+})
+
+local ESPTab = Window:CreateTab("ESP","search-code")
+
+local ESPSection = ESPTab:CreateSection("ESP")
+
+local ESPToggle = ESPTab:CreateToggle({
+	Name = "Toggle ESP",
+	CurrentValue = false,
+	Flag = "ESP",
+	Callback = function(Value)
+		ESP(Value)
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Toggled Player ESP",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+	end,
+})
+
+local GenESPToggle = ESPTab:CreateToggle({
+	Name = "Toggle Generator ESP",
+	CurrentValue = false,
+	Flag = "GenESP",
+	Callback = function(Value)
+		GenESP(Value)
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Enabled Generator ESP",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+	end,
+})
+
+local MinionESPToggle = ESPTab:CreateToggle({
+	Name = "Toggle Minion ESP",
+	CurrentValue = false,
+	Flag = "MinionESP",
+	Callback = function(Value)
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Enabled Minion ESP",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+	end,
+})
+
+local LightingSection = Tab:CreateSection("Lighting & Optimization")
+
+local OptimizationsButton = Tab:CreateButton({
+	Name = "Optimizations",
+	Callback = function()
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Enabled Optimizations",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+		
+		local optdb = false
+		
+		game["Run Service"].Heartbeat:Connect(function()
+			if optdb == true then return end
+			optdb = true
+			for i,decal in pairs(workspace:GetDescendants()) do
+				if decal:IsA("Decal") then
+					decal:Destroy()
+				end
+			end
+
+			for i,mesh in pairs(workspace:GetDescendants()) do
+				if mesh:IsA("MeshPart") then
+					mesh.RenderFidelity = Enum.RenderFidelity.Performance
+				end
+			end
+
+			for i,part in pairs(workspace:GetDescendants()) do
+				if part:IsA("Part") then 
+					part.CastShadow = false
+				end
+			end
+			task.wait(10)
+			optdb = false
+		end)
+	end,
+})
+
+local BetterLighting = Tab:CreateButton({
+	Name = "Fullbright",
+	Callback = function()
+		Rayfield:Notify({
+			Title = "Purple Minion Hub",
+			Content = "Enabled Better Lighting",
+			Duration = 6.5,
+			Image = "thumbs-up",
+		})
+		for i,lightingobject in pairs(game.Lighting:GetChildren()) do
+			lightingobject:Destroy()
+		end
+
+		game.Lighting.ClockTime = 14.5
+
+		game.Lighting.ChildAdded:Connect(function(Child)
+			Child:Destroy()
+		end)
+
+		game.Lighting.Changed:Connect(function()
+			game.Lighting.ClockTime = 14.5 
+		end)
+	end})
+
+local AnimationsTab = Window:CreateTab("Animations","user-round")
+
+local EmoteAnimations = AnimationsTab:CreateSection("Emotes")
+
+local GriddyButton = AnimationsTab:CreateButton({
+	Name = "Griddy",
+	Callback = function()
+		local character = game.Players.LocalPlayer.Character
+		local humanoid = character:WaitForChild("Humanoid")
+		local animator = humanoid:WaitForChild("Animator")
+
+		local animation = Instance.new("Animation",workspace)
+		animation.AnimationId = "rbxassetid://" .. 93821902607346
+
+		local track = animator:LoadAnimation(animation)
+		track.Looped = true
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play()
+	end})
+
+local TVButton = AnimationsTab:CreateButton({
+	Name = "TV Time",
+	Callback = function()
+		local character = game.Players.LocalPlayer.Character
+		local humanoid = character:WaitForChild("Humanoid")
+		local animator = humanoid:WaitForChild("Animator")
+
+		local animation = Instance.new("Animation",workspace)
+		animation.AnimationId = "rbxassetid://" .. 134545227541599
+
+		local track = animator:LoadAnimation(animation)
+		track.Looped = true
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play()
+	end})
+
+local LockedButton = AnimationsTab:CreateButton({
+	Name = "Locked",
+	Callback = function()
+		local character = game.Players.LocalPlayer.Character
+		local humanoid = character:WaitForChild("Humanoid")
+		local animator = humanoid:WaitForChild("Animator")
+
+		local animation = Instance.new("Animation",workspace)
+		animation.AnimationId = "rbxassetid://" .. 77920404652731
+
+		local track = animator:LoadAnimation(animation)
+		track.Looped = true
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play()
+	end})
+
+local HakariButton = AnimationsTab:CreateButton({
+	Name = "Hakari",
+	Callback = function()
+		local character = game.Players.LocalPlayer.Character
+		local humanoid = character:WaitForChild("Humanoid")
+		local animator = humanoid:WaitForChild("Animator")
+
+		local animation = Instance.new("Animation",workspace)
+		animation.AnimationId = "rbxassetid://" .. 138019937280193
+
+		local track = animator:LoadAnimation(animation)
+		track.Looped = true
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play()
+	end})
+
+local LaughButton = AnimationsTab:CreateButton({
+
+	Name = "Schadenfreude (!Broken!)",
+	Callback = function()
+
+		local character = game.Players.LocalPlayer.Character
+		local humanoid = character:WaitForChild("Humanoid")
+		local animator = humanoid:WaitForChild("Animator")
+
+		local animation = Instance.new("Animation",workspace)
+		animation.AnimationId = "rbxassetid://" .. 99907172493781
+
+		local track = animator:LoadAnimation(animation)
+		track.Looped = true
+		track.Priority = Enum.AnimationPriority.Action4
+		track:Play()
+	end})
+
+local IngameTab = Window:CreateTab("Ingame","locate")
+
+local KillerSection = IngameTab:CreateSection("Killer")
+local TPClosest = IngameTab:CreateButton({
+
+	Name = "Teleport to closest",
+	Callback = function()
+		local ClosestCharacter,Distance = getClosestSurvivor()
+
+		local character = game.Players.LocalPlayer.Character
+		character:PivotTo(ClosestCharacter:GetPivot())
+	end})
+
+local AutoKillerButton = IngameTab:CreateButton({
+
+	Name = "Auto-win (Killer)",
+	Callback = function()
+		local Debounce = false
+
+		local character = game.Players.LocalPlayer.Character
+		game["Run Service"].Heartbeat:Connect(function()
+			local ClosestCharacter,Distance = getClosestSurvivor()
+			if ClosestCharacter == nil then return end
+			if Debounce == true then return end
+			if character.Parent == workspace.Players.Killers then
+				mouse1click()
+
+				character:PivotTo(ClosestCharacter:GetPivot())
+				Debounce = true
+				task.delay(0.05,function()
+					Debounce = false
+				end)
+			else return end
+		end)
+	end})
+
+local Aimbotbutton = IngameTab:CreateButton({
+	Name = "Aimbot",
+	Callback = function()
+		local AlignOri = Instance.new("AlignOrientation",game.Players.LocalPlayer.Character)
+		local a0,a1 = Instance.new("Attachment"), Instance.new("Attachment")
+
+		game["Run Service"].Heartbeat:Connect(function()
+			local Closest,distance = getClosestSurvivor()
+
+			if Closest then
+				a1.Parent = Closest
+				a0.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+				AlignOri.Attachment0 = a0
+				AlignOri.Attachment1 = a1
+				AlignOri.Responsiveness = 200
+			else
+				a0:Destroy()
+				a1:Destroy()
+			end
+		end)
+	end,
+})
+
+local BetterHitboxTab = IngameTab:CreateButton({
+	Name = "Better Hitboxes",
+	Callback = function()
+		local HitboxModule = require(game.ReplicatedStorage.Modules.Hitboxes)
+		local v8 = HitboxModule
+		local v9 = game.Players.LocalPlayer
+		local v13 = {
+			["Size"] = Vector3.new(10, 10, 10),
+			["CFrameOffset"] = CFrame.new(0, 0, -5.25),
+			["Damage"] = 67,
+			["Time"] = 0.75,
+			["Knockback"] = 105,
+			["HitMultiple"] = true,
+		}
+		v8:CreateHitbox(v9, v13)
+	end,
+})
+
+local CharacterTab = Window:CreateTab("Player & Character","locate")
+
+local JumpSlider = CharacterTab:CreateSlider({
+	Name = "Jump Power (50 is default)",
+	Range = {0, 250},
+	Increment = 1,
+	Suffix = "Power",
+	CurrentValue = 0,
+	Flag = "JumpHeightSlider",
+	Callback = function(Value)
+		local db = false
+		game["Run Service"].Heartbeat:Connect(function()
+			if db == true then return end
+			db = true
+			local charac = game.Players.LocalPlayer.Character
+			local hum = charac:FindFirstChild("Humanoid") :: Humanoid
+			hum.UseJumpPower = true
+			hum.JumpPower = Value
+			task.wait(1)
+			db = false
+		end)
+	end,
+})
+
+local CharRagdolled = false
+
+local RagdollButton = CharacterTab:CreateButton({
+	Name = "Ragdoll",
+	Callback = function()
+		CharRagdolled = not CharRagdolled
+		if CharRagdolled == true then
+			Ragdoll()
+		else
+			UnRagdoll()
+		end
+	end,
+})

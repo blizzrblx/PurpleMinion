@@ -1,5 +1,4 @@
 
---!nocheck
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 Rayfield:Notify({
@@ -26,7 +25,7 @@ end
 
 local function Ragdoll()
 	local char = game.Players.LocalPlayer.Character
-	local Hum = char.Humanoid :: Humanoid
+	local Hum = char.Humanoid
 
 	for _,motor6d in pairs(char:GetDescendants()) do
 		if motor6d:IsA('Motor6D') then
@@ -50,7 +49,7 @@ end
 
 local function UnRagdoll()
 	local char = game.Players.LocalPlayer.Character
-	local Hum = char.Humanoid :: Humanoid
+	local Hum = char.Humanoid
 
 	for _,BallSocket in pairs(char:GetDescendants()) do
 		if BallSocket:IsA('BallSocketConstraint') then
@@ -66,7 +65,7 @@ local function UnRagdoll()
 	end
 end
 
-local function HiglightLobby(Value:boolean)
+local function HiglightLobby(Value)
 	for i,spectator in pairs(workspace.Players.Spectating:GetChildren()) do
 		if Value == true and not spectator:FindFirstChild("MinionESP") then
 			local ESPInstance = Instance.new("Highlight",spectator)
@@ -80,7 +79,7 @@ local function HiglightLobby(Value:boolean)
 	end
 end
 
-local function HiglightKillers(Value:boolean)
+local function HiglightKillers(Value)
 	for i,killer in pairs(workspace.Players.Killers:GetChildren()) do
 		if Value == true and not killer:FindFirstChild("MinionESP") then
 			local ESPInstance = Instance.new("Highlight",killer)
@@ -94,7 +93,7 @@ local function HiglightKillers(Value:boolean)
 	end
 end
 
-local function HiglightSurvivors(Value:boolean)
+local function HiglightSurvivors(Value)
 	for i,survivor in pairs(workspace.Players.Survivors:GetChildren()) do
 		if Value == true and not survivor:FindFirstChild("MinionESP") then
 			local ESPInstance = Instance.new("Highlight",survivor)
@@ -108,7 +107,7 @@ local function HiglightSurvivors(Value:boolean)
 	end
 end
 
-local function HighlightGens(Value:boolean)
+local function HighlightGens(Value)
 	if not workspace.Map.Ingame.Map then return end
 	for i,gen in pairs(workspace.Map.Ingame.Map:GetChildren()) do
 		if Value == true and not gen:FindFirstChild("MinionESP") then
@@ -125,7 +124,7 @@ local function HighlightGens(Value:boolean)
 	end
 end
 
-local function HiglightMinions(Value:boolean)
+local function HiglightMinions(Value)
 	if not workspace.Map.Ingame then return end
 	for i,minion in pairs(workspace.Map.Ingame:GetChildren()) do
 		if minion.Name == "PizzaDeliveryRig" or minion.Name == "1x1x1x1Zombie" then
@@ -141,7 +140,7 @@ local function HiglightMinions(Value:boolean)
 		end
 	end
 end
-local function ESP(Value:boolean)
+local function ESP(Value)
 	
 	HiglightLobby(Value)
 
@@ -175,7 +174,7 @@ local function ESP(Value:boolean)
 	end)
 end
 
-local function GenESP(Value:boolean)
+local function GenESP(Value)
 	_G.GENESPDB = false
 
 	game["Run Service"].Heartbeat:Connect(function()
@@ -187,7 +186,7 @@ local function GenESP(Value:boolean)
 	end)
 end
 
-local function MinionESP(Value:boolean)
+local function MinionESP(Value)
 	_G.MINIONESPDB = false
 	game["Run Service"].Heartbeat:Connect(function()
 		if _G.MINIONESP == true then return end

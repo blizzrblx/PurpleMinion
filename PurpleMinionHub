@@ -447,7 +447,7 @@ local InfStamToggle = Tab:CreateToggle({
 	CurrentValue = false,
 	Flag = "InfiniteStam",
 	Callback = function(Value)
-		if Results.Require and Value == true then then
+		if Results.Require and Value == true then
 			local StaminaModule = require(game.ReplicatedStorage.Systems.Character.Game.Sprinting)
 			StaminaModule.SprintSpeed = 28.5
 			StaminaModule.StaminaLossDisabled = true
